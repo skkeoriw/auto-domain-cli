@@ -237,10 +237,13 @@ async function connect() {
         for (const [k, v] of Object.entries(headers)) {
           if (!['host', 'connection', 'upgrade'].includes(k.toLowerCase())) fetchHeaders.set(k, v);
         }
+        const requestBody = method !== 'GET' && method !== 'HEAD' && body
+          ? Buffer.from(body, 'base64')
+          : undefined;
         const resp = await fetch(`http://${LOCAL_HOST}:${PORT}${path}`, {
           method,
           headers: fetchHeaders,
-          body: (method !== 'GET' && method !== 'HEAD') ? Buffer.from(body, 'base64') : undefined,
+          body: requestBody,
           redirect: 'manual'
         });
         const respBody = await resp.arrayBuffer();
