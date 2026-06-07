@@ -29,6 +29,7 @@ mkdir -p "$CACHE_DIR"
 PORT=""
 NAME=""
 TOKEN=""
+METADATA=""
 RESET=0
 DAEMON=0
 STOP=0
@@ -40,14 +41,17 @@ for arg in "$@"; do
     --port=*) PORT="${arg#--port=}" ;;
     --name=*) NAME="${arg#--name=}" ;;
     --token=*) TOKEN="${arg#--token=}" ;;
+    --metadata=*) METADATA="${arg#--metadata=}" ;;
+    -m=*) METADATA="${arg#-m=}" ;;
     --reset) RESET=1 ;;
     --daemon|-d) DAEMON=1 ;;
     --stop) STOP=1 ;;
     --replace) REPLACE=1 ;;
     --auto-name) AUTO_NAME=1 ;;
     -h|--help)
-      echo "Usage: $0 --port=3000 [--name=myapp] [--token=xxx] [--daemon] [--stop] [--reset] [--replace] [--auto-name]"
+      echo "Usage: $0 --port=3000 [--name=myapp] [--token=xxx] [--metadata=json] [--daemon] [--stop] [--reset] [--replace] [--auto-name]"
       echo "  --token       optional; kept for compatibility when a server token is issued"
+      echo "  --metadata    optional JSON metadata stored in tunnel-admin"
       echo "  --replace     replace existing tunnel for the same name (server-side)"
       echo "  --auto-name   server appends a random 4-digit suffix to --name (guarantees uniqueness)"
       exit 0
@@ -116,6 +120,7 @@ fi
 ARGS="--port=$PORT"
 [[ -n "$TOKEN" ]] && ARGS="$ARGS --token=$TOKEN"
 [[ -n "$NAME" ]] && ARGS="$ARGS --name=$NAME"
+[[ -n "$METADATA" ]] && ARGS="$ARGS --metadata=$METADATA"
 [[ "$REPLACE" == "1" ]] && ARGS="$ARGS --replace"
 [[ "$AUTO_NAME" == "1" ]] && ARGS="$ARGS --auto-name"
 [[ -n "${AUTO_DOMAIN_SERVER:-}" ]] && ARGS="$ARGS --server=$AUTO_DOMAIN_SERVER"

@@ -22,6 +22,7 @@ const args = Object.fromEntries(
 const PORT      = parseInt(args.port || args.p || '3000', 10);
 const TOKEN     = args.token  || args.t || '';
 const NAME      = args.name   || args.n || '';
+const METADATA  = args.metadata || args.m || '';
 const AUTO_NAME = args['auto-name'] === true || args['auto-name'] === '1' || args.auto === true || args.auto === '1';
 const REPLACE   = args['replace'] === true || args['replace'] === '1';
 const SERVER    = (args.server || 'wss://tunnel-api.chxyka.ccwu.cc').replace(/\/$/, '');
@@ -71,6 +72,21 @@ let failingSince   = null;   // timestamp: when did continuous failure start
 let replacing      = false;  // true while --replace eviction is in progress
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
+
+let cachedIPv4 = '';
+async function getPublicIPv4() {
+  if (cachedIPv4) return cachedIPv4;
+  try {
+    const ctrl = new AbortController();
+    const t = setTimeout(() => ctrl.abort(), 2000);
+    const resp = await fetch('https://ipv4.icanhazip.com', { signal: ctrl.signal });
+    clearTimeout(t);
+    cachedIPv4 = (await resp.text()).trim();
+    return cachedIPv4;
+  } catch {
+    return '';
+  }
+}
 
 function currentSubdomain() {
   return NAME || (tunnelUrl ? tunnelUrl.split('//')[1].split('.')[0] : '?');
@@ -134,19 +150,23 @@ function startLocalCheck(ws) {
   localCheckTimer = setInterval(() => doLocalCheck(ws), LOCAL_CHECK_INTERVAL_MS);
 }
 
-function buildWsUrl() {
+async function buildWsUrl() {
   const base = SERVER.replace(/^http/, 'ws');
   const u    = new URL(base);
   if (TOKEN) u.searchParams.set('token', TOKEN);
   u.searchParams.set('port', String(PORT));
   if (NAME) u.searchParams.set('name', NAME);
   if (AUTO_NAME) u.searchParams.set('auto', '1');
+  if (METADATA) u.searchParams.set('metadata', METADATA);
+  if (REPLACE) u.searchParams.set('replace', '1');
+  const ip = await getPublicIPv4();
+  if (ip) u.searchParams.set('client_ip', ip);
   return u.toString();
 }
 
 // ── Connect ───────────────────────────────────────────────────────────────────
 
-function connect() {
+async function connect() {
   // 自毁检查：超过 24h 没有成功连接则退出
   if (failingSince && Date.now() - failingSince > SELF_DESTRUCT_MS) {
     console.error('[auto-domain] 24h without successful connection. Self-destructing.');
@@ -160,7 +180,7 @@ function connect() {
   if (!failingSince) failingSince = Date.now();
 
   console.log('[auto-domain] Connecting...');
-  const ws = new WebSocket(buildWsUrl());
+  const ws = new WebSocket(await buildWsUrl());
 
   ws.on('open', () => {
     reconnectDelay = 3000;

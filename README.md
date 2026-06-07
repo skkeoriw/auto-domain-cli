@@ -26,9 +26,11 @@ Tunnel is live!
 | `--port` | 是 | 本地端口 |
 | `--name` | 否 | 子域名（如 `myapp` -> `myapp.chxyka.ccwu.cc`） |
 | `--token` | 否 | 兼容旧配置；服务端启用 token 时才需要 |
+| `--metadata` | 否 | JSON 字符串，写入 tunnel-admin 的 metadata，用于标记 SOP Runtime 等业务类型 |
 | `--daemon` | 是 | 后台运行，打印公网 URL 后退出，Claude/Codex 可读取结果 |
 | `--stop` | 否 | 停止后台 agent |
 | `--reset` | 否 | 清除本地缓存重新初始化 |
+| `--replace` | 否 | 同名 tunnel 已存在时替换旧 agent |
 | `--auto-name` | 否 | 服务端自动给名称追加随机后缀，避免重名 |
 
 > 必须使用 `--daemon`：不加此参数脚本会阻塞，Agent 收不到 URL 反馈。
