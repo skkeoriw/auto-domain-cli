@@ -117,13 +117,13 @@ if [[ ! -d "$AGENT_DIR/node_modules/ws" ]]; then
   (cd "$AGENT_DIR" && npm install --silent --prefer-offline)
 fi
 
-ARGS="--port=$PORT"
-[[ -n "$TOKEN" ]] && ARGS="$ARGS --token=$TOKEN"
-[[ -n "$NAME" ]] && ARGS="$ARGS --name=$NAME"
-[[ -n "$METADATA" ]] && ARGS="$ARGS --metadata=$METADATA"
-[[ "$REPLACE" == "1" ]] && ARGS="$ARGS --replace"
-[[ "$AUTO_NAME" == "1" ]] && ARGS="$ARGS --auto-name"
-[[ -n "${AUTO_DOMAIN_SERVER:-}" ]] && ARGS="$ARGS --server=$AUTO_DOMAIN_SERVER"
+ARGS=("--port=$PORT")
+[[ -n "$TOKEN" ]] && ARGS+=("--token=$TOKEN")
+[[ -n "$NAME" ]] && ARGS+=("--name=$NAME")
+[[ -n "$METADATA" ]] && ARGS+=("--metadata=$METADATA")
+[[ "$REPLACE" == "1" ]] && ARGS+=("--replace")
+[[ "$AUTO_NAME" == "1" ]] && ARGS+=("--auto-name")
+[[ -n "${AUTO_DOMAIN_SERVER:-}" ]] && ARGS+=("--server=$AUTO_DOMAIN_SERVER")
 
 if [[ "$DAEMON" == "1" ]]; then
   # ── 幂等检查：同名 tunnel 已在运行，直接返回 URL ──────────────────────────
@@ -146,7 +146,7 @@ if [[ "$DAEMON" == "1" ]]; then
   fi
 
   > "$LOG_FILE"
-  setsid node "$AGENT_JS" $ARGS >> "$LOG_FILE" 2>&1 < /dev/null &
+  setsid node "$AGENT_JS" "${ARGS[@]}" >> "$LOG_FILE" 2>&1 < /dev/null &
   echo $! > "$PID_FILE"
 
   echo "Agent started in background (PID: $(cat "$PID_FILE"))..."
@@ -206,5 +206,5 @@ if [[ "$DAEMON" == "1" ]]; then
   exit 1
 else
   echo "Connecting auto-domain..."
-  exec node "$AGENT_JS" $ARGS
+  exec node "$AGENT_JS" "${ARGS[@]}"
 fi
