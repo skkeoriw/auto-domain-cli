@@ -235,7 +235,11 @@ async function connect() {
       try {
         const fetchHeaders = new Headers();
         for (const [k, v] of Object.entries(headers)) {
-          if (!['host', 'connection', 'upgrade'].includes(k.toLowerCase())) fetchHeaders.set(k, v);
+          if (!['host', 'connection', 'upgrade', 'keep-alive', 'proxy-authenticate',
+            'proxy-authorization', 'te', 'trailer', 'transfer-encoding',
+            'content-length'].includes(k.toLowerCase())) {
+            fetchHeaders.set(k, v);
+          }
         }
         const requestBody = method !== 'GET' && method !== 'HEAD' && body
           ? Buffer.from(body, 'base64')
@@ -254,6 +258,7 @@ async function connect() {
           headers: respHeaders, body: Buffer.from(respBody).toString('base64')
         }));
       } catch (err) {
+        console.error(`[auto-domain] Local request failed: ${method} ${path}: ${err.message}`);
         ws.send(JSON.stringify({
           type: 'response', id, status: 502,
           headers: { 'content-type': 'text/plain' },

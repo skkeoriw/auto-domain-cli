@@ -318,7 +318,14 @@ async function handleRequest(ws, msg) {
     const hasBody = msg.body && !['GET', 'HEAD'].includes(msg.method.toUpperCase());
     const body    = hasBody ? Buffer.from(msg.body, 'base64') : undefined;
     const headers = { ...msg.headers };
-    delete headers['host'];
+    for (const key of Object.keys(headers)) {
+      const lower = key.toLowerCase();
+      if (['host', 'connection', 'upgrade', 'keep-alive', 'proxy-authenticate',
+        'proxy-authorization', 'te', 'trailer', 'transfer-encoding',
+        'content-length'].includes(lower)) {
+        delete headers[key];
+      }
+    }
     headers['host'] = `${LOCAL_HOST}:${PORT}`;
 
     const resp = await fetch(localUrl, { method: msg.method, headers, body, redirect: 'manual' });
@@ -333,7 +340,7 @@ async function handleRequest(ws, msg) {
       body: respBuffer.toString('base64'),
     }));
   } catch (err) {
-    console.error(`[auto-domain] Local request failed: ${err.message}`);
+    console.error(`[auto-domain] Local request failed: ${msg.method} ${msg.path}: ${err.message}`);
     ws.send(JSON.stringify({
       type: 'response', id: msg.id, status: 502,
       headers: { 'content-type': 'text/plain' },
