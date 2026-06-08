@@ -95,6 +95,7 @@ https://github.com/ChangfengHU/cloudflare-youtube-pipeline/tree/main/auto-domain
 修改 `auto-domain-tunnel/auto-domain.sh`、`auto-domain-tunnel/agent/agent.js` 或 `auto-domain-tunnel/client/README.md` 后，推送到 `main` 会触发 GitHub Action：
 
 - 同步 `agent.js` 到 `auto-domain-cli/agent/agent.js`
+- 同步 `agent.js` 到 `auto-domain-cli/skills/auto-domain/agent/agent.js`
 - 同步 `auto-domain.sh` 到 `auto-domain-cli/skills/auto-domain/scripts/run.sh`
 - 同步 `client/README.md` 到 `auto-domain-cli/README.md`
 - 上传 `agent.js` 和 `auto-domain.sh` 到 R2/CDN
