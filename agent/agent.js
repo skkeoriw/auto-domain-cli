@@ -126,7 +126,11 @@ async function doLocalCheck(ws) {
   if (ok === localOk) return; // 无变化，不处理
   const prev = localOk;
   localOk = ok;
-  if (prev === null) return; // 首次检查，不发通知
+  // 首次检查也要同步给服务端，否则 tunnel-admin 会长期停留在 unknown。
+  if (ws && ws.readyState === WebSocket.OPEN) {
+    ws.send(JSON.stringify({ type: 'ping', local_ok: ok }));
+  }
+  if (prev === null) return; // 首次检查不发通知
   if (ok) {
     console.log('[auto-domain] ✅ Local service recovered on port', PORT);
     sendTg(tgMsg('🟢', 'Local Service Recovered', {
@@ -137,10 +141,6 @@ async function doLocalCheck(ws) {
     sendTg(tgMsg('🔴', 'Local Service Down', {
       Port: String(PORT), Subdomain: currentSubdomain(),
     })).catch(() => {});
-  }
-  // 通知服务端（如果 ws 还连着）
-  if (ws && ws.readyState === WebSocket.OPEN) {
-    ws.send(JSON.stringify({ type: 'ping', local_ok: ok }));
   }
 }
 
