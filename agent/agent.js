@@ -29,6 +29,7 @@ const SERVER    = (args.server || 'wss://tunnel-api.chxyka.ccwu.cc').replace(/\/
 const TG_TOKEN  = args['tg-token'] || process.env.TG_BOT_TOKEN  || '';
 const TG_CHAT   = args['tg-chat']  || process.env.TG_CHAT_ID    || '';
 const LOCAL_HOST = process.env.AUTO_DOMAIN_LOCAL_HOST || '127.0.0.1';
+const LOCAL_HEALTH_PATH = (process.env.AUTO_DOMAIN_LOCAL_HEALTH_PATH || '/').trim() || '/';
 
 const PING_INTERVAL_MS       = 300_000;              // 5 分钟心跳
 const LOCAL_CHECK_INTERVAL_MS = 30_000;              // 30s 本地健康检查
@@ -113,7 +114,8 @@ async function checkLocalService() {
   try {
     const ctrl = new AbortController();
     const t = setTimeout(() => ctrl.abort(), 3000);
-    await fetch(`http://${LOCAL_HOST}:${PORT}/`, { signal: ctrl.signal });
+    const healthPath = LOCAL_HEALTH_PATH.startsWith('/') ? LOCAL_HEALTH_PATH : `/${LOCAL_HEALTH_PATH}`;
+    await fetch(`http://${LOCAL_HOST}:${PORT}${healthPath}`, { signal: ctrl.signal });
     clearTimeout(t);
     return true;
   } catch {
